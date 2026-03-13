@@ -415,6 +415,62 @@ release:
         </aside>
       </section>
 
+      <!-- APPENDIX: Changelog customization -->
+      <section>
+        <h2>Appendix: Changelog Customization</h2>
+        <p>By default, only <code class="green">feat</code> and <code class="green">fix</code> appear in the changelog</p>
+        <pre><code data-trim class="language-json">
+{
+  "presetConfig": {
+    "types": [
+      { "type": "feat", "section": "Features" },
+      { "type": "fix", "section": "Bug Fixes" },
+      { "type": "perf", "section": "Performance", "hidden": false },
+      { "type": "refactor", "hidden": true },
+      { "type": "chore", "hidden": true },
+      { "type": "docs", "hidden": true }
+    ]
+  }
+}
+        </code></pre>
+        <p class="fragment small">Control inclusion per type with <code>hidden: true/false</code></p>
+        <aside class="notes">
+          Key point: the changelog is NOT every commit. By default only feat
+          and fix are included. The types config gives fine-grained control.
+          You can surface perf or any other type if needed.
+        </aside>
+      </section>
+
+      <!-- APPENDIX: Semi-automatic changelog workflow -->
+      <section>
+        <h2>Appendix: Semi-automatic Workflow</h2>
+        <p>Generate a draft, review it, then publish</p>
+        <div style="text-align: left; font-size: 0.75em;">
+          <p><strong>Option 1:</strong> Generate locally, edit before committing</p>
+          <pre><code data-trim class="language-bash">
+npx conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
+# review and edit CHANGELOG.md, then commit
+          </code></pre>
+          <p><strong>Option 2:</strong> Draft releases on GitHub/GitLab</p>
+          <pre><code data-trim class="language-json">
+["@semantic-release/github", { "draftRelease": true }]
+          </code></pre>
+          <p><strong>Option 3:</strong> Preview before releasing</p>
+          <pre><code data-trim class="language-bash">
+npx semantic-release --dry-run
+          </code></pre>
+        </div>
+        <aside class="notes">
+          This was asked during the talk. For large projects, full automation
+          can be overwhelming. Three options:
+          1. Generate the changelog locally with the CLI, edit it, then commit.
+          2. Use draftRelease: true so releases are created as drafts you can
+             edit in the GitHub/GitLab UI before publishing.
+          3. Use --dry-run to preview what semantic-release would do.
+          The draft release workflow is the sweet spot for most teams.
+        </aside>
+      </section>
+
     </div>
   </div>
 
