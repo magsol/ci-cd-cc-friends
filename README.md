@@ -4,7 +4,9 @@ Slides and demo materials for a Platform Engineering talk on integrating Convent
 
 ## Viewing the slides
 
-Open `index.html` in a browser, or serve locally:
+Live at **https://magsol.github.io/ci-cd-cc-friends/**
+
+Or serve locally:
 
 ```bash
 python3 -m http.server 8080
