@@ -64,7 +64,7 @@ git push origin main
 
 ## Troubleshooting
 - If husky hooks don't fire: run `npx husky` manually
-- If semantic-release doesn't create a release: make sure GITHUB_TOKEN has write permissions (check repo Settings > Actions > General > Workflow permissions)
+- If semantic-release doesn't create a release: make sure `GITHUB_TOKEN` has write permissions (check repo Settings > Actions > General > Workflow permissions)
 - For the demo, make sure the repo is public OR that you have a PAT with appropriate scopes
 
 ## GitLab CI callout
