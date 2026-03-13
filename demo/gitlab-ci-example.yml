@@ -1,0 +1,27 @@
+# Example .gitlab-ci.yml for reference (not used in demo)
+# Swap @semantic-release/github for @semantic-release/gitlab in .releaserc.json
+# and use GITLAB_TOKEN instead of GITHUB_TOKEN.
+
+stages:
+  - lint
+  - release
+
+commitlint:
+  stage: lint
+  image: node:20
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - npm ci
+    - npx commitlint --from $CI_MERGE_REQUEST_DIFF_BASE_SHA --to HEAD --verbose
+
+release:
+  stage: release
+  image: node:20
+  only:
+    - main
+  script:
+    - npm ci
+    - npx semantic-release
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN

@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI/CD, CC, &amp; Friends</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/night.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --r-heading-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --r-main-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+    .reveal pre { font-size: 0.55em; }
+    .reveal code { font-size: 0.9em; }
+    .reveal ul { font-size: 0.85em; }
+    .reveal .small { font-size: 0.65em; color: #888; }
+    .reveal .highlight { color: #42affa; }
+    .reveal .green { color: #4ec9b0; }
+    .reveal .red { color: #f44747; }
+    .reveal .yellow { color: #dcdcaa; }
+    .two-col { display: flex; gap: 2em; align-items: flex-start; }
+    .two-col > * { flex: 1; }
+    .reveal .slide-birthday { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .meme-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5em; max-width: 80%; margin: 0 auto; }
+    .meme-grid img { width: 100%; border-radius: 8px; }
+    .commit-example { text-align: left; background: #1e1e1e; padding: 1em; border-radius: 8px; font-family: monospace; font-size: 0.7em; }
+    .pipeline-flow { display: flex; align-items: center; justify-content: center; gap: 0.5em; flex-wrap: wrap; }
+    .pipeline-flow .step { background: #2d2d2d; padding: 0.5em 1em; border-radius: 8px; border: 1px solid #42affa; font-size: 0.7em; }
+    .pipeline-flow .arrow { font-size: 1.2em; color: #42affa; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Title slide -->
+      <section>
+        <h1 style="font-size: 1.8em;">CI/CD, CC, &amp; Friends</h1>
+        <img src="title.png" alt="CI/CD/CC Friends logo mashup" style="max-height: 35vh; border-radius: 8px; margin: 0.5em 0;">
+        <p class="small">Shannon Quinn &bull; Platform Engineering &bull; March 2026</p>
+        <aside class="notes">
+          Title slide. "CI/CD, CC, and Friends" — the Friends logo mashup
+          gets a laugh. Today's talk: how we've been using Conventional Commits
+          in pmbench and how we're integrating them into our CI/CD automation.
+        </aside>
+      </section>
+
+      <!-- SLIDE 2: Birthday icebreaker -->
+      <section data-background-class="slide-birthday">
+        <h2>First and Most Importantly</h2>
+        <ul>
+          <li>It's my birthday today</li>
+          <li>...there gon' be memes</li>
+        </ul>
+        <img src="first_slide.png" alt="Birthday memes" style="max-height: 55vh; border-radius: 8px; margin-top: 0.5em;">
+        <aside class="notes">
+          Hit them with the birthday reveal. Get a laugh, then transition:
+          "But enough about me — let's talk about commits."
+        </aside>
+      </section>
+
+      <!-- SLIDE 3: Agenda -->
+      <section>
+        <h2>Agenda</h2>
+        <ol>
+          <li>Why commit messages matter</li>
+          <li>Conventional Commits — the format</li>
+          <li>Tooling: commitlint, semantic-release, changelogs</li>
+          <li>CI/CD integration (GitHub Actions &amp; GitLab CI)</li>
+          <li><strong>Live demo</strong></li>
+          <li>Q&amp;A</li>
+        </ol>
+        <aside class="notes">
+          Quick roadmap. ~20 minutes total. The live demo is the main event.
+        </aside>
+      </section>
+
+      <!-- SLIDE 4: The problem -->
+      <section>
+        <h2>The Problem</h2>
+        <pre><code data-trim class="language-text">
+$ git log --oneline
+a1b2c3d fix stuff
+e4f5g6h WIP
+i7j8k9l updated things
+m0n1o2p asdfasdf
+q3r4s5t Friday commit
+        </code></pre>
+        <p class="fragment">We've all been here. What changed? Why? Is this a breaking change?</p>
+        <aside class="notes">
+          Everyone recognizes these messages. The point: unstructured messages
+          mean you can't automate anything — no changelogs, no auto-versioning,
+          no way to quickly understand impact.
+        </aside>
+      </section>
+
+      <!-- MEME BREAK 1: Bad commits on my birthday -->
+      <section data-background-class="slide-birthday">
+        <h3>Me reading the git log on my birthday</h3>
+        <img src="this_is_fine.png" alt="This is fine — bad commit messages" style="max-height: 60vh; border-radius: 8px;">
+        <aside class="notes">
+          Quick laugh. "This is fine" with bad commit messages everywhere.
+          Then transition: "There has to be a better way..."
+        </aside>
+      </section>
+
+      <!-- SLIDE 5: What are Conventional Commits? -->
+      <section>
+        <h2>Conventional Commits</h2>
+        <div class="commit-example">
+          <span class="green">&lt;type&gt;</span>(<span class="yellow">scope</span>): <span style="color:#fff">&lt;description&gt;</span><br><br>
+          [optional body]<br><br>
+          [optional footer(s)]
+        </div>
+        <br>
+        <p><a href="https://www.conventionalcommits.org" target="_blank" style="font-size:0.7em;">conventionalcommits.org</a></p>
+        <aside class="notes">
+          The spec is simple: type, optional scope, description.
+          Body and footers are optional but useful for BREAKING CHANGE notes.
+        </aside>
+      </section>
+
+      <!-- SLIDE 6: Types -->
+      <section>
+        <h2>Common Types</h2>
+        <div class="two-col">
+          <div>
+            <ul>
+              <li><code class="green">feat</code> — new feature</li>
+              <li><code class="green">fix</code> — bug fix</li>
+              <li><code class="yellow">docs</code> — documentation</li>
+              <li><code class="yellow">style</code> — formatting</li>
+            </ul>
+          </div>
+          <div>
+            <ul>
+              <li><code class="yellow">refactor</code> — restructure</li>
+              <li><code class="yellow">test</code> — add/fix tests</li>
+              <li><code class="yellow">ci</code> — CI/CD changes</li>
+              <li><code class="yellow">chore</code> — maintenance</li>
+            </ul>
+          </div>
+        </div>
+        <br>
+        <p class="fragment"><code class="red">BREAKING CHANGE:</code> in the footer, or <code class="red">!</code> after the type</p>
+        <aside class="notes">
+          feat and fix are the most important because they map directly to
+          SemVer: feat = minor bump, fix = patch bump, BREAKING CHANGE = major.
+        </aside>
+      </section>
+
+      <!-- SLIDE 7: pmbench development threads (scopes) -->
+      <section>
+        <h2>Scopes in Practice: pmbench</h2>
+        <p>14 development threads = 14 CC scopes</p>
+        <img src="dev_threads.png" alt="pmbench development threads" class="r-stretch" style="border-radius: 8px;">
+        <p class="fragment small">Each thread maps to a scope in our commit messages</p>
+        <aside class="notes">
+          In pmbench, we defined 14 "development threads" — focus areas like
+          infrastructure, experiment management, visualization, etc. Each one
+          becomes a CC scope. This means anyone can glance at a commit and
+          immediately know which area of the codebase is affected. These are
+          enforced via commitlint's scope-enum rule.
+        </aside>
+      </section>
+
+      <!-- SLIDE 8: Real commit examples from pmbench -->
+      <section>
+        <h2>Real Commits from pmbench</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.6em; align-items: center;">
+          <img src="commits1.png" alt="fix(infra): update integration tests to use Workspace pattern" style="max-width: 90%; border-radius: 8px;">
+          <img src="commits2.png" alt="chore(config) and refactor(config) commits" style="max-width: 90%; border-radius: 8px;">
+          <img src="commits3.png" alt="chore(experiment) and fix(experiment) commits" style="max-width: 90%; border-radius: 8px;">
+        </div>
+        <aside class="notes">
+          These are real commits from the past week. Point out:
+          - fix(infra) — a bug fix in the infrastructure thread
+          - chore(config) — maintenance work on configuration, collaborating with @kadams
+          - refactor(config) — restructuring, same scope but different type
+          - chore(experiment) and fix(experiment) — linting cleanup vs actual bug fix,
+            both in the experiment management thread.
+          The types tell you the nature of the change, the scopes tell you where.
+        </aside>
+      </section>
+
+      <!-- SLIDE 8: Why this matters — the automation pipeline -->
+      <section>
+        <h2>Why This Matters</h2>
+        <p>Structured commits unlock <span class="highlight">automation</span>:</p>
+        <div class="pipeline-flow">
+          <div class="step">git commit</div>
+          <div class="arrow">&rarr;</div>
+          <div class="step">commitlint<br><span class="small">validates format</span></div>
+          <div class="arrow">&rarr;</div>
+          <div class="step">CI pipeline</div>
+          <div class="arrow">&rarr;</div>
+          <div class="step">semantic-release<br><span class="small">bumps version</span></div>
+          <div class="arrow">&rarr;</div>
+          <div class="step">CHANGELOG<br><span class="small">auto-generated</span></div>
+        </div>
+        <aside class="notes">
+          This is the key insight. CC isn't just about readable messages — it's
+          machine-readable metadata that powers your entire release pipeline.
+        </aside>
+      </section>
+
+      <!-- SLIDE 9: Tooling overview — commitlint -->
+      <section>
+        <h2>commitlint</h2>
+        <p>Validates commit messages against CC rules</p>
+        <pre><code data-trim class="language-javascript">
+// commitlint.config.js
+module.exports = {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'scope-enum': [2, 'always', [
+      'collab', 'compare', 'config', 'docs',
+      'experiment', 'explain', 'framework',
+      'hyperparam', 'infra', 'obs', 'prov',
+      'search', 'server', 'viz',
+    ]],
+  },
+};
+        </code></pre>
+        <p class="fragment">Enforced locally via <code class="highlight">husky</code> git hooks</p>
+        <aside class="notes">
+          commitlint is the gatekeeper. Combined with husky, it runs on every
+          commit locally so bad messages never even reach the remote.
+          Mention: scope-enum is optional but helpful for consistency.
+        </aside>
+      </section>
+
+      <!-- SLIDE 10: Tooling — semantic-release -->
+      <section>
+        <h2>semantic-release</h2>
+        <p>Reads CC history &rarr; determines next version &rarr; publishes</p>
+        <div class="two-col">
+          <div>
+            <h4 style="color:#42affa;">Commit</h4>
+            <ul>
+              <li><code>fix(...)</code></li>
+              <li><code>feat(...)</code></li>
+              <li><code>feat(...)!</code></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="color:#4ec9b0;">Version Bump</h4>
+            <ul>
+              <li>1.0.<strong>1</strong> (patch)</li>
+              <li>1.<strong>1</strong>.0 (minor)</li>
+              <li><strong>2</strong>.0.0 (major)</li>
+            </ul>
+          </div>
+        </div>
+        <br>
+        <p class="fragment small">Also creates git tags, GitHub/GitLab releases, and publishes packages</p>
+        <aside class="notes">
+          semantic-release is the crown jewel. No more debating version numbers.
+          The commit history IS the release plan. Mention it supports both
+          GitHub and GitLab.
+        </aside>
+      </section>
+
+      <!-- SLIDE 11: Tooling — CHANGELOG -->
+      <section>
+        <h2>Auto-generated CHANGELOG</h2>
+        <pre><code data-trim class="language-markdown">
+## [1.2.0] - 2026-03-13
+
+### Features
+- **pipeline:** add batch processing for phenotype extraction (a1b2c3d)
+
+### Bug Fixes
+- **io:** handle missing columns in input CSV gracefully (e4f5g6h)
+
+### BREAKING CHANGES
+- **models:** restructure model registry API (i7j8k9l)
+        </code></pre>
+        <p class="fragment">Zero manual effort. Generated from commit history.</p>
+        <aside class="notes">
+          This is what your users/team actually sees. Fully automated,
+          grouped by type, with links back to commits. No more manually
+          writing release notes.
+        </aside>
+      </section>
+
+      <!-- SLIDE 12: CI/CD — GitHub Actions -->
+      <section>
+        <h2>GitHub Actions</h2>
+        <pre><code data-trim class="language-yaml">
+# .github/workflows/release.yml
+name: Release
+on:
+  push:
+    branches: [main]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        </code></pre>
+        <aside class="notes">
+          This is what we'll use in the demo. Push to main, semantic-release
+          analyzes commits since last tag, bumps version, generates changelog,
+          creates a GitHub release. All automatic.
+        </aside>
+      </section>
+
+      <!-- SLIDE 13: GitLab CI equivalent -->
+      <section>
+        <h2>GitLab CI</h2>
+        <pre><code data-trim class="language-yaml">
+# .gitlab-ci.yml
+release:
+  stage: deploy
+  image: node:20
+  only:
+    - main
+  script:
+    - npm ci
+    - npx semantic-release
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN
+        </code></pre>
+        <p class="small">Same tooling, just swap the CI config and token variable.<br>
+        semantic-release has a <code>@semantic-release/gitlab</code> plugin.</p>
+        <aside class="notes">
+          For our internal work, we use GitLab. The good news: semantic-release
+          supports GitLab natively with the gitlab plugin. The config is nearly
+          identical. Mention @semantic-release/gitlab replaces @semantic-release/github.
+        </aside>
+      </section>
+
+      <!-- MEME BREAK 2: Live demo vs cake -->
+      <section data-background-class="slide-birthday">
+        <h3>Decisions, decisions...</h3>
+        <img src="either_or.png" alt="Sweating guy: eat birthday cake vs do a live demo" style="max-height: 60vh; border-radius: 8px;">
+        <aside class="notes">
+          Tension breaker right before the demo. "The hardest choice of the day..."
+          Then: "Let's do both. Demo first, cake after."
+        </aside>
+      </section>
+
+      <!-- SLIDE 14: Live demo intro -->
+      <section data-background-color="#1a1a2e">
+        <h2>Live Demo</h2>
+        <p>Let's see it in action</p>
+        <ol style="font-size: 0.8em;">
+          <li>Make a commit with a <span class="red">bad</span> message &rarr; rejected</li>
+          <li>Make a <code class="green">fix</code> commit &rarr; patch bump</li>
+          <li>Make a <code class="green">feat</code> commit &rarr; minor bump</li>
+          <li>Push &rarr; watch CI auto-release</li>
+        </ol>
+        <aside class="notes">
+          Switch to terminal. Open the throwaway demo repo.
+          Follow the demo script step by step.
+        </aside>
+      </section>
+
+      <!-- SLIDE 15: Recap -->
+      <section>
+        <h2>Recap</h2>
+        <ul>
+          <li><strong>Conventional Commits</strong> = structured, machine-readable messages</li>
+          <li><strong>commitlint + husky</strong> = enforce locally</li>
+          <li><strong>semantic-release</strong> = auto-version + auto-release</li>
+          <li><strong>CHANGELOG</strong> = auto-generated from history</li>
+          <li>Works with <span class="highlight">GitHub Actions</span> and <span class="highlight">GitLab CI</span></li>
+        </ul>
+        <aside class="notes">
+          Quick summary. The main takeaway: if you structure your commits,
+          you get all of this automation for free.
+        </aside>
+      </section>
+
+      <!-- MEME BREAK 3: Closing birthday meme -->
+      <section data-background-class="slide-birthday">
+        <img src="kermit.png" alt="Birthday cake with v1.0.0 candles" style="max-height: 60vh; border-radius: 8px;">
+        <p>Release <code class="highlight">v1.0.0</code> of my new year</p>
+        <aside class="notes">
+          End on a high note. "And just like semantic-release, my age gets
+          a major version bump today." Then open up Q&A.
+        </aside>
+      </section>
+
+      <!-- SLIDE 16: Q&A -->
+      <section>
+        <h2>Questions?</h2>
+        <p class="small">
+          Resources:<br>
+          <a href="https://www.conventionalcommits.org">conventionalcommits.org</a><br>
+          <a href="https://github.com/conventional-changelog/commitlint">commitlint</a> &bull;
+          <a href="https://github.com/semantic-release/semantic-release">semantic-release</a> &bull;
+          <a href="https://github.com/conventional-changelog/conventional-changelog">conventional-changelog</a>
+        </p>
+        <aside class="notes">
+          Open the floor. Common questions: "Does this work with squash merges?"
+          (Yes, configure commitlint on PR titles). "What about monorepos?"
+          (semantic-release has monorepo support via plugins).
+        </aside>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      plugins: [RevealNotes, RevealHighlight],
+      transition: 'slide',
+    });
+  </script>
+</body>
+</html>
